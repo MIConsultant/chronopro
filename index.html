@@ -209,6 +209,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .spinner{width:18px;height:18px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
+<script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
 </head>
 <body>
 <div class="shell" id="shell">
@@ -485,12 +486,16 @@ function loadLocal() {
 // MSAL INIT
 // ═══════════════════════════════════════════════════════
 async function loadMSAL() {
+  // MSAL chargé statiquement dans le <head>
   return new Promise((resolve, reject) => {
     if (window.msal) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js';
-    s.onload = resolve; s.onerror = reject;
-    document.head.appendChild(s);
+    // Attendre max 5s que MSAL soit disponible
+    let tries = 0;
+    const check = setInterval(() => {
+      tries++;
+      if (window.msal) { clearInterval(check); resolve(); }
+      else if (tries > 50) { clearInterval(check); reject(new Error('MSAL non disponible')); }
+    }, 100);
   });
 }
 
@@ -1020,7 +1025,8 @@ function printReport() {
   .meta{color:#666;font-size:13px;margin:4px 0 24px}table{width:100%;border-collapse:collapse}
   th{background:#f4f4f4;padding:8px 10px;text-align:left;font-size:12px;border-bottom:2px solid #ddd}
   td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}
-  .total{font-weight:bold;margin-top:16px;font-size:14px;text-align:right}</style></head><body>
+  .total{font-weight:bold;margin-top:16px;font-size:14px;text-align:right}</style><script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+</head><body>
   <h1>📋 ${esc(p.name)}</h1>
   <div class="meta">Rapport généré le ${new Date().toLocaleDateString('fr-CA')} · ${e.length} entrées</div>
   <table><tr><th>Date</th><th>Début</th><th>Fin</th><th>Durée</th><th>Type</th><th>Description</th></tr>
