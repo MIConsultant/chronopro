@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ChronoPro">
+<meta name="theme-color" content="#0a0f1a">
+<title>ChronoPro</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0f1a; --surface: #111827; --surface2: #1a2436; --surface3: #222f45;
+  --border: #2a3f5f; --border2: #1e2d45;
+  --accent: #00d4aa; --accent-dim: rgba(0,212,170,.15); --accent-glow: rgba(0,212,170,.4);
+  --accent2: #ff6b35; --accent2-dim: rgba(255,107,53,.15);
+  --accent3: #7c6fcd; --accent3-dim: rgba(124,111,205,.15);
+  --warn: #ffa502; --danger: #ff4757; --success: #2ed573;
+  --text: #e2eaf6; --muted: #5a7494; --muted2: #7a94b4;
+  --radius: 14px; --radius-sm: 8px;
+  --safe-top: env(safe-area-inset-top,0px); --safe-bottom: env(safe-area-inset-bottom,0px);
+  --font-mono: 'DM Mono', monospace; --font: 'Syne', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden;padding-top:var(--safe-top)}
+
+/* ── LAYOUT ── */
+.shell{display:flex;flex-direction:column;height:100dvh;padding-top:var(--safe-top)}
+.header{flex-shrink:0;background:linear-gradient(180deg,#0d1525 0%,transparent 100%);border-bottom:1px solid var(--border2);padding:14px 20px 12px;position:relative;z-index:50}
+.header-row{display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:20px;font-weight:800;letter-spacing:-0.5px;line-height:1}
+.logo em{color:var(--accent);font-style:normal}
+.logo small{display:block;font-size:10px;font-weight:400;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:1px}
+.header-right{display:flex;align-items:center;gap:10px}
+.sync-badge{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .2s}
+.sync-badge.synced{color:var(--accent);border-color:rgba(0,212,170,.3);background:var(--accent-dim)}
+.sync-badge.syncing{color:var(--warn);border-color:rgba(255,165,2,.3)}
+.sync-badge.error{color:var(--danger);border-color:rgba(255,71,87,.3)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.sync-badge.syncing .sync-dot{animation:blink .8s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.user-btn{width:34px;height:34px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:border-color .2s;overflow:hidden}
+.user-btn:hover{border-color:var(--accent)}
+.user-btn img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+
+.tabs{flex-shrink:0;display:flex;gap:2px;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border2);overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{padding:7px 15px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid transparent;white-space:nowrap;transition:all .2s;color:var(--muted);letter-spacing:.3px;text-transform:uppercase}
+.tab.active{background:var(--accent);color:#0a0f1a;border-color:var(--accent)}
+.tab:not(.active):hover{border-color:var(--border);color:var(--text)}
+
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{display:none;padding:16px 18px;max-width:680px;margin:0 auto}
+.page.active{display:block}
+
+/* ── AUTH SCREEN ── */
+.auth-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;padding:40px 24px;text-align:center}
+.auth-logo{font-size:52px;margin-bottom:20px;filter:drop-shadow(0 0 20px rgba(0,212,170,.4))}
+.auth-title{font-size:26px;font-weight:800;margin-bottom:8px}
+.auth-sub{font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.6;max-width:320px}
+.auth-features{display:flex;flex-direction:column;gap:8px;margin-bottom:32px;text-align:left;width:100%;max-width:300px}
+.auth-feature{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted2);padding:8px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border2)}
+.auth-feature span:first-child{font-size:18px}
+.btn-ms{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;max-width:300px;padding:14px 20px;background:#2563eb;color:white;border:none;border-radius:var(--radius-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;letter-spacing:.3px}
+.btn-ms:hover{background:#1d4ed8;transform:translateY(-1px);box-shadow:0 8px 24px rgba(37,99,235,.4)}
+.btn-ms svg{flex-shrink:0}
+.or-divider{display:flex;align-items:center;gap:12px;width:100%;max-width:300px;margin:12px 0;color:var(--muted);font-size:12px}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-offline{width:100%;max-width:300px;padding:11px 20px;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .2s}
+.btn-offline:hover{color:var(--text);border-color:var(--muted)}
+
+/* ── TIMER CARD ── */
+.timer-card{background:linear-gradient(135deg,var(--surface) 0%,var(--surface2) 100%);border:1px solid var(--border);border-radius:var(--radius);padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+.timer-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent3),var(--accent2))}
+.timer-type-row{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.type-btn{padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;font-weight:700;cursor:pointer;transition:all .2s;font-family:var(--font);letter-spacing:.5px;text-transform:uppercase}
+.type-btn.sel-travail{background:var(--accent-dim);color:var(--accent);border-color:rgba(0,212,170,.4)}
+.type-btn.sel-appel{background:var(--accent2-dim);color:var(--accent2);border-color:rgba(255,107,53,.4)}
+.type-btn.sel-rendezvous{background:var(--accent3-dim);color:var(--accent3);border-color:rgba(124,111,205,.4)}
+.timer-desc{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;margin-bottom:14px}
+.timer-desc:focus{border-color:var(--accent)}
+.timer-desc::placeholder{color:var(--muted)}
+.timer-display{font-family:var(--font-mono);font-size:clamp(46px,11vw,70px);font-weight:500;letter-spacing:3px;color:var(--accent);text-align:center;margin:10px 0 16px;line-height:1;transition:color .3s;text-shadow:0 0 40px rgba(0,212,170,.2)}
+.timer-display.running{animation:glow-pulse 2s ease-in-out infinite}
+.timer-display.paused{color:var(--warn);text-shadow:0 0 40px rgba(255,165,2,.2)}
+@keyframes glow-pulse{0%,100%{text-shadow:0 0 20px rgba(0,212,170,.2)}50%{text-shadow:0 0 50px rgba(0,212,170,.5)}}
+.btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:12px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;letter-spacing:.4px;text-transform:uppercase}
+.btn-start{background:var(--accent);color:#0a0f1a}
+.btn-start:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-stop{background:var(--danger);color:white}
+.btn-stop:hover{filter:brightness(1.1)}
+.btn-pause{background:var(--warn);color:#0a0f1a}
+.btn-manual{background:var(--surface2);color:var(--muted);border:1px solid var(--border);flex:none;padding:12px 16px}
+.btn-manual:hover{color:var(--text);border-color:var(--accent3)}
+
+/* ── SECTION TITLE ── */
+.section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);margin:18px 0 10px;display:flex;align-items:center;gap:10px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border2)}
+
+/* ── SUMMARY GRID ── */
+.summary-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.sum-card{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 10px;text-align:center}
+.sum-val{font-family:var(--font-mono);font-size:18px;font-weight:500;line-height:1}
+.sum-label{font-size:9px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+.sum-card.c-total .sum-val{color:var(--accent)}
+.sum-card.c-appel .sum-val{color:var(--accent2)}
+.sum-card.c-rdv .sum-val{color:var(--accent3)}
+
+/* ── ENTRY LIST ── */
+.entry-list{display:flex;flex-direction:column;gap:6px}
+.entry{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;transition:border-color .2s}
+.entry:hover{border-color:var(--border)}
+.entry-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ei-travail{background:var(--accent-dim)} .ei-appel{background:var(--accent2-dim)} .ei-rendezvous{background:var(--accent3-dim)}
+.entry-body{flex:1;min-width:0}
+.entry-desc{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-meta{font-size:10px;color:var(--muted);margin-top:3px;font-family:var(--font-mono)}
+.entry-dur{font-family:var(--font-mono);font-size:14px;font-weight:500;color:var(--accent);flex-shrink:0}
+.entry-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:5px;border-radius:6px;font-size:13px;transition:all .2s;flex-shrink:0}
+.entry-del:hover{color:var(--danger);background:rgba(255,71,87,.1)}
+
+/* ── PROJECT SELECTOR ── */
+.proj-pill{display:flex;align-items:center;gap:7px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:12px;color:var(--muted);transition:border-color .2s;font-weight:600}
+.proj-pill:hover{border-color:var(--accent);color:var(--text)}
+.proj-dot-sm{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-backdrop.show{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:20px 20px 0 0;padding:24px 20px calc(24px + var(--safe-bottom));width:100%;max-width:680px;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.modal-backdrop.show .modal{transform:translateY(0)}
+.modal-handle{width:36px;height:4px;border-radius:2px;background:var(--border);margin:0 auto 20px}
+.modal-title{font-size:17px;font-weight:700;margin-bottom:18px}
+.form-label{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:6px}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-family:var(--font);font-size:14px;outline:none;transition:border-color .2s;margin-bottom:12px}
+.form-input:focus{border-color:var(--accent)}
+.form-input[type=time],.form-input[type=date]{color-scheme:dark}
+.form-row{display:flex;gap:8px}
+.form-row .form-group{flex:1}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.btn-cancel{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.btn-save{background:var(--accent);color:#0a0f1a}
+
+/* ── STATS ── */
+.bar-wrap{margin-bottom:10px}
+.bar-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--muted2)}
+.bar-track{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.fill-travail{background:linear-gradient(90deg,var(--accent),#00f5c4)}
+.fill-appel{background:linear-gradient(90deg,var(--accent2),#ff8c5a)}
+.fill-rendezvous{background:linear-gradient(90deg,var(--accent3),#a59de0)}
+.week-chart{display:flex;gap:5px;align-items:flex-end;height:72px;margin-bottom:6px}
+.week-bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%}
+.week-bar-inner{flex:1;width:100%;display:flex;align-items:flex-end}
+.week-bar{width:100%;background:var(--accent);border-radius:4px 4px 0 0;opacity:.8;min-height:0;transition:height .6s cubic-bezier(.4,0,.2,1)}
+.week-day{font-size:9px;color:var(--muted);text-align:center;white-space:nowrap;font-family:var(--font-mono)}
+
+/* ── CONFIG / SETUP ── */
+.setup-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.setup-step{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--border2)}
+.setup-step:last-child{border-bottom:none}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-body{flex:1}
+.step-title{font-size:13px;font-weight:700;margin-bottom:4px}
+.step-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.step-code{font-family:var(--font-mono);font-size:11px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 10px;margin-top:8px;color:var(--accent);word-break:break-all}
+.config-input-wrap{position:relative;margin-bottom:12px}
+.config-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 40px 10px 14px;color:var(--text);font-family:var(--font-mono);font-size:12px;outline:none;transition:border-color .2s}
+.config-input:focus{border-color:var(--accent)}
+.config-input.valid{border-color:var(--success)}
+.config-input.invalid{border-color:var(--danger)}
+.config-input-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px}
+.btn-primary{width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#0a0f1a;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .2s;letter-spacing:.4px}
+.btn-primary:hover{filter:brightness(1.1)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.info-box{background:var(--accent-dim);border:1px solid rgba(0,212,170,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--muted2);line-height:1.7;margin-bottom:12px}
+.info-box strong{color:var(--accent)}
+.warn-box{background:rgba(255,165,2,.08);border:1px solid rgba(255,165,2,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:#e8c06a;line-height:1.7;margin-bottom:12px}
+.danger-box{background:rgba(255,71,87,.08);border:1px solid rgba(255,71,87,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:#ff8a96;line-height:1.7;margin-bottom:12px}
+
+/* ── EXPORT ── */
+.export-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.export-btn{padding:14px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--muted2);cursor:pointer;font-family:var(--font);font-size:12px;font-weight:700;text-align:center;transition:all .2s;letter-spacing:.4px;text-transform:uppercase}
+.export-btn:hover{border-color:var(--accent);color:var(--accent)}
+.export-btn .export-icon{font-size:22px;display:block;margin-bottom:6px}
+
+/* ── PROJ MODAL ── */
+.proj-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:background .2s;font-size:13px;font-weight:600}
+.proj-item:hover{background:var(--surface2)}
+.proj-item.is-active{background:var(--accent-dim);color:var(--accent)}
+.proj-del{margin-left:auto;background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 6px;border-radius:4px;transition:all .2s}
+.proj-del:hover{color:var(--danger);background:rgba(255,71,87,.1)}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:44px 20px;color:var(--muted)}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.4}
+.empty-txt{font-size:13px;line-height:1.6}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(16px + var(--safe-bottom));left:50%;transform:translateX(-50%) translateY(70px);background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 18px;font-size:13px;font-weight:600;z-index:999;transition:transform .3s,opacity .3s;opacity:0;white-space:nowrap;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.ok{border-color:rgba(0,212,170,.4);color:var(--accent)}
+.toast.err{border-color:rgba(255,71,87,.4);color:var(--danger)}
+
+/* ── SPINNER ── */
+.spinner{width:18px;height:18px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+<script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+</head>
+<body>
+<div class="shell" id="shell">
+
+  <!-- AUTH SCREEN (affiché si pas encore connecté) -->
+  <div id="auth-screen" style="display:none">
+    <div class="auth-screen">
+      <div class="auth-logo">⏱</div>
+      <div class="auth-title">Chrono<em style="color:var(--accent)">Pro</em></div>
+      <div class="auth-sub">Suivi de temps synchronisé via OneDrive. Tes données disponibles sur tous tes appareils.</div>
+      <div class="auth-features">
+        <div class="auth-feature"><span>☁️</span><span>Sync automatique avec OneDrive</span></div>
+        <div class="auth-feature"><span>📱</span><span>PC, iPad, iPhone — toujours à jour</span></div>
+        <div class="auth-feature"><span>🔒</span><span>Tes données, ton compte M365</span></div>
+      </div>
+      <button class="btn-ms" onclick="loginMSAL()">
+        <svg width="20" height="20" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        Se connecter avec Microsoft
+      </button>
+      <div class="or-divider">ou</div>
+      <button class="btn-offline" onclick="useOffline()">Utiliser sans connexion (local)</button>
+      <div style="font-size:11px;color:var(--muted);margin-top:20px;text-align:center;max-width:280px;line-height:1.6">
+        Pour la connexion Microsoft, configurez d'abord une App Registration dans Entra ID.<br>
+        <span style="color:var(--accent);cursor:pointer" onclick="showSetupGuide()">Voir le guide de configuration →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- APP PRINCIPALE -->
+  <div id="app-main" style="display:none">
+    <div class="header">
+      <div class="header-row">
+        <div>
+          <div class="logo">Chrono<em>Pro</em><small>Suivi de temps</small></div>
+        </div>
+        <div class="header-right">
+          <div class="sync-badge" id="sync-badge" onclick="manualSync()" title="Cliquer pour synchroniser">
+            <div class="sync-dot"></div>
+            <span id="sync-label">Local</span>
+          </div>
+          <div class="proj-pill" onclick="openProjModal()">
+            <div class="proj-dot-sm" id="hdr-proj-dot" style="background:var(--accent)"></div>
+            <span id="hdr-proj-name">Projet</span>
+            <span style="font-size:10px;color:var(--muted)">▾</span>
+          </div>
+          <div class="user-btn" onclick="showUserMenu()" id="user-btn" title="Compte">👤</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="showPage('chrono')" id="tab-chrono">⏱ Chrono</div>
+      <div class="tab" onclick="showPage('journal')" id="tab-journal">📋 Journal</div>
+      <div class="tab" onclick="showPage('stats')" id="tab-stats">📊 Stats</div>
+      <div class="tab" onclick="showPage('export')" id="tab-export">📤 Export</div>
+      <div class="tab" onclick="showPage('config')" id="tab-config">⚙️ Config</div>
+    </div>
+
+    <div class="content">
+      <!-- CHRONO -->
+      <div class="page active" id="page-chrono">
+        <div class="timer-card">
+          <div class="timer-type-row">
+            <button class="type-btn sel-travail" onclick="setType('travail')">💻 Travail</button>
+            <button class="type-btn" onclick="setType('appel')">📞 Appel</button>
+            <button class="type-btn" onclick="setType('rendezvous')">📅 Rendez-vous</button>
+          </div>
+          <input class="timer-desc" id="timer-desc" placeholder="Description de l'activité…" autocomplete="off">
+          <div class="timer-display" id="timer-display">00:00:00</div>
+          <div class="btn-row" id="btns-start">
+            <button class="btn btn-start" onclick="startTimer()">▶ Démarrer</button>
+            <button class="btn btn-manual" onclick="openManual()">+ Manuel</button>
+          </div>
+          <div class="btn-row" id="btns-run" style="display:none">
+            <button class="btn btn-pause" onclick="pauseTimer()" id="btn-pause">⏸ Pause</button>
+            <button class="btn btn-stop" onclick="stopTimer()">⏹ Enregistrer</button>
+          </div>
+        </div>
+
+        <div class="section-title">Aujourd'hui</div>
+        <div class="summary-grid">
+          <div class="sum-card c-total"><div class="sum-val" id="td-total">0h 00m</div><div class="sum-label">Total</div></div>
+          <div class="sum-card c-appel"><div class="sum-val" id="td-appels">0</div><div class="sum-label">Appels</div></div>
+          <div class="sum-card c-rdv"><div class="sum-val" id="td-rdv">0</div><div class="sum-label">RDV</div></div>
+        </div>
+        <div class="entry-list" id="list-today"></div>
+      </div>
+
+      <!-- JOURNAL -->
+      <div class="page" id="page-journal">
+        <div style="display:flex;gap:7px;margin-bottom:12px;flex-wrap:wrap">
+          <input type="date" class="form-input" id="f-from" style="flex:1;min-width:130px;margin:0" onchange="renderJournal()">
+          <input type="date" class="form-input" id="f-to" style="flex:1;min-width:130px;margin:0" onchange="renderJournal()">
+          <select class="form-input" id="f-type" style="flex:1;min-width:110px;margin:0" onchange="renderJournal()">
+            <option value="">Tous types</option>
+            <option value="travail">Travail</option>
+            <option value="appel">Appel</option>
+            <option value="rendezvous">Rendez-vous</option>
+          </select>
+        </div>
+        <div class="entry-list" id="list-journal"></div>
+      </div>
+
+      <!-- STATS -->
+      <div class="page" id="page-stats">
+        <div class="section-title">Ce projet — tout</div>
+        <div class="summary-grid" id="stats-sum"></div>
+        <div class="section-title">Répartition</div>
+        <div id="stats-bars"></div>
+        <div class="section-title">7 derniers jours</div>
+        <div class="week-chart" id="stats-week"></div>
+        <div style="display:flex;gap:5px" id="stats-week-labels"></div>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="page" id="page-export">
+        <div class="section-title">Exporter les données</div>
+        <div class="export-grid">
+          <button class="export-btn" onclick="exportCSV()"><span class="export-icon">📊</span>CSV / Excel</button>
+          <button class="export-btn" onclick="exportJSON()"><span class="export-icon">📄</span>JSON</button>
+          <button class="export-btn" onclick="printReport()"><span class="export-icon">🖨️</span>Rapport PDF</button>
+          <button class="export-btn" onclick="exportTSV()"><span class="export-icon">📋</span>TSV (Calc)</button>
+        </div>
+        <div class="section-title">Données</div>
+        <button class="export-btn" style="width:100%;border-color:rgba(255,71,87,.3);color:var(--danger)" onclick="clearAll()">🗑 Effacer toutes les données locales</button>
+      </div>
+
+      <!-- CONFIG -->
+      <div class="page" id="page-config">
+        <div id="config-content"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Saisie manuelle -->
+<div class="modal-backdrop" id="modal-manual">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">✏️ Saisie manuelle</div>
+    <label class="form-label">Date</label>
+    <input type="date" class="form-input" id="m-date">
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Début</label><input type="time" class="form-input" id="m-start"></div>
+      <div class="form-group"><label class="form-label">Fin</label><input type="time" class="form-input" id="m-end"></div>
+    </div>
+    <label class="form-label">Description</label>
+    <input type="text" class="form-input" id="m-desc" placeholder="Ex: Appel client XYZ">
+    <label class="form-label">Type</label>
+    <select class="form-input" id="m-type">
+      <option value="travail">💻 Travail</option>
+      <option value="appel">📞 Appel</option>
+      <option value="rendezvous">📅 Rendez-vous</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('modal-manual')">Annuler</button>
+      <button class="btn btn-save" onclick="saveManual()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Projets -->
+<div class="modal-backdrop" id="modal-proj">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📁 Projets</div>
+    <div id="proj-list" style="margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <input type="text" class="form-input" id="new-proj-name" placeholder="Nouveau projet…" style="margin:0;flex:1">
+      <button class="btn btn-save" style="flex:none;padding:10px 16px" onclick="addProject()">+</button>
+    </div>
+    <div class="modal-actions"><button class="btn btn-cancel" onclick="closeModal('modal-proj')">Fermer</button></div>
+  </div>
+</div>
+
+<!-- MODAL: Guide setup -->
+<div class="modal-backdrop" id="modal-setup">
+  <div class="modal" style="max-height:85vh;overflow-y:auto;border-radius:20px 20px 0 0">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔧 Configuration Entra ID</div>
+    <div class="info-box">Ces étapes sont à faire <strong>une seule fois</strong> dans ton tenant M365. Tu as déjà les droits Global Admin — ça prendra environ 10 minutes.</div>
+    <div class="setup-card">
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Accéder à Entra ID</div>
+          <div class="step-desc">Ouvre le portail Entra et va dans <strong>Applications → App registrations → New registration</strong></div>
+          <div class="step-code">https://entra.microsoft.com</div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Créer l'enregistrement</div>
+          <div class="step-desc">
+            • Name: <strong>ChronoPro</strong><br>
+            • Supported account types: <strong>Accounts in this organizational directory only</strong><br>
+            • Redirect URI: choisir <strong>Single-page application (SPA)</strong> et coller l'URL complète de ce fichier HTML hébergé sur SharePoint/OneDrive
+          </div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Copier les identifiants</div>
+          <div class="step-desc">Dans la page Overview de l'app, note le <strong>Application (client) ID</strong> et le <strong>Directory (tenant) ID</strong></div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Ajouter les permissions API</div>
+          <div class="step-desc">
+            API permissions → Add → Microsoft Graph → <strong>Delegated</strong>:<br>
+            • <strong>Files.ReadWrite</strong> (accès OneDrive)<br>
+            • <strong>User.Read</strong> (profil utilisateur)
+          </div>
+        </div>
+      </div>
+      <div class="setup-step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Saisir les identifiants dans l'app</div>
+          <div class="step-desc">Retourne dans l'onglet <strong>⚙️ Config</strong> et colle le Client ID et le Tenant ID.</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn btn-cancel" style="width:100%;padding:13px;border-radius:var(--radius-sm)" onclick="closeModal('modal-setup')">Fermer</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIGURATION MSAL (Microsoft Authentication Library)
+// ═══════════════════════════════════════════════════════
+const GRAPH_SCOPES = ['User.Read', 'Files.ReadWrite'];
+const ONEDRIVE_FILE_PATH = '/me/drive/root:/ChronoPro/chronopro-data.json:';
+const PROJ_COLORS = ['#00d4aa','#ff6b35','#7c6fcd','#ffa502','#2ed573','#ff4757','#1e90ff','#fd79a8'];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let S = {
+  cfg: { clientId: '', tenantId: '', mode: 'offline' }, // mode: 'offline' | 'msal'
+  projects: [{ id: 'default', name: 'Mon projet', color: '#00d4aa' }],
+  activeProject: 'default',
+  entries: [],
+  timer: { running: false, paused: false, start: null, elapsed: 0, type: 'travail' }
+};
+let currentType = 'travail';
+let timerInterval = null;
+let msalApp = null;
+let msalAccount = null;
+let syncState = 'local'; // local | synced | syncing | error
+let syncTimeout = null;
+let lastSyncedHash = null;
+
+// ═══════════════════════════════════════════════════════
+// PERSISTENCE LOCALE
+// ═══════════════════════════════════════════════════════
+function saveLocal() {
+  try { localStorage.setItem('cp_v3', JSON.stringify(S)); } catch(e){}
+}
+function loadLocal() {
+  try {
+    const r = localStorage.getItem('cp_v3');
+    if (r) S = Object.assign(S, JSON.parse(r));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// MSAL INIT
+// ═══════════════════════════════════════════════════════
+async function loadMSAL() {
+  // MSAL chargé statiquement dans le <head>
+  return new Promise((resolve, reject) => {
+    if (window.msal) { resolve(); return; }
+    // Attendre max 5s que MSAL soit disponible
+    let tries = 0;
+    const check = setInterval(() => {
+      tries++;
+      if (window.msal) { clearInterval(check); resolve(); }
+      else if (tries > 50) { clearInterval(check); reject(new Error('MSAL non disponible')); }
+    }, 100);
+  });
+}
+
+async function initMSAL() {
+  if (!S.cfg.clientId || !S.cfg.tenantId) return false;
+  try {
+    await loadMSAL();
+    const cfg = {
+      auth: {
+        clientId: S.cfg.clientId,
+        authority: `https://login.microsoftonline.com/${S.cfg.tenantId}`,
+        redirectUri: window.location.href.split('?')[0].split('#')[0]
+      },
+      cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+    };
+    msalApp = new msal.PublicClientApplication(cfg);
+    await msalApp.initialize();
+    // Handle redirect
+    const resp = await msalApp.handleRedirectPromise();
+    if (resp) { msalAccount = resp.account; return true; }
+    const accounts = msalApp.getAllAccounts();
+    if (accounts.length > 0) { msalAccount = accounts[0]; return true; }
+    return false;
+  } catch(e) {
+    console.error('MSAL init error:', e);
+    return false;
+  }
+}
+
+async function loginMSAL() {
+  if (!S.cfg.clientId || !S.cfg.tenantId) {
+    showSetupGuide();
+    return;
+  }
+  try {
+    await loadMSAL();
+    const ready = await initMSAL();
+    if (!ready) {
+      await msalApp.loginRedirect({ scopes: GRAPH_SCOPES });
+    } else {
+      S.cfg.mode = 'msal';
+      saveLocal();
+      showApp();
+    }
+  } catch(e) {
+    toast('Erreur de connexion: ' + e.message, 'err');
+  }
+}
+
+async function getToken() {
+  if (!msalApp || !msalAccount) return null;
+  try {
+    const r = await msalApp.acquireTokenSilent({ scopes: GRAPH_SCOPES, account: msalAccount });
+    return r.accessToken;
+  } catch(e) {
+    try {
+      await msalApp.acquireTokenRedirect({ scopes: GRAPH_SCOPES, account: msalAccount });
+    } catch(e2) { return null; }
+  }
+}
+
+function useOffline() {
+  S.cfg.mode = 'offline';
+  saveLocal();
+  showApp();
+}
+
+function showSetupGuide() {
+  document.getElementById('modal-setup').classList.add('show');
+}
+
+// ═══════════════════════════════════════════════════════
+// ONEDRIVE SYNC
+// ═══════════════════════════════════════════════════════
+function dataHash() {
+  return JSON.stringify({ entries: S.entries, projects: S.projects, activeProject: S.activeProject });
+}
+
+async function syncToOneDrive() {
+  if (S.cfg.mode !== 'msal') return;
+  const token = await getToken();
+  if (!token) { setSyncState('error'); return; }
+  setSyncState('syncing');
+  try {
+    const body = JSON.stringify({ entries: S.entries, projects: S.projects, activeProject: S.activeProject, version: 3 });
+    const res = await fetch(`https://graph.microsoft.com/v1.0${ONEDRIVE_FILE_PATH}/content`, {
+      method: 'PUT',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    lastSyncedHash = dataHash();
+    setSyncState('synced');
+    saveLocal();
+  } catch(e) {
+    setSyncState('error');
+    console.error('Sync error:', e);
+  }
+}
+
+async function loadFromOneDrive() {
+  if (S.cfg.mode !== 'msal') return false;
+  const token = await getToken();
+  if (!token) return false;
+  setSyncState('syncing');
+  try {
+    const res = await fetch(`https://graph.microsoft.com/v1.0${ONEDRIVE_FILE_PATH}/content`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.status === 404) { setSyncState('synced'); return true; } // Premier usage
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    if (data.entries) S.entries = data.entries;
+    if (data.projects) S.projects = data.projects;
+    if (data.activeProject) S.activeProject = data.activeProject;
+    lastSyncedHash = dataHash();
+    setSyncState('synced');
+    saveLocal();
+    return true;
+  } catch(e) {
+    setSyncState('error');
+    console.error('Load error:', e);
+    return false;
+  }
+}
+
+async function manualSync() {
+  if (S.cfg.mode !== 'msal') { toast('Mode hors-ligne — connexion M365 requise'); return; }
+  await loadFromOneDrive();
+  renderAll();
+  toast('Synchronisé avec OneDrive ✓', 'ok');
+}
+
+function scheduleSync() {
+  if (syncTimeout) clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(() => syncToOneDrive(), 3000); // délai 3s après la dernière modification
+}
+
+async function loadUserPhoto() {
+  if (S.cfg.mode !== 'msal') return;
+  const token = await getToken();
+  if (!token) return;
+  try {
+    const res = await fetch('https://graph.microsoft.com/v1.0/me/photo/$value', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return;
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const btn = document.getElementById('user-btn');
+    btn.innerHTML = `<img src="${url}" alt="profil">`;
+  } catch(e) {}
+}
+
+function setSyncState(state) {
+  syncState = state;
+  const badge = document.getElementById('sync-badge');
+  const label = document.getElementById('sync-label');
+  if (!badge) return;
+  badge.className = 'sync-badge';
+  if (state === 'synced') { badge.classList.add('synced'); label.textContent = 'Sync ✓'; }
+  else if (state === 'syncing') { badge.classList.add('syncing'); label.textContent = 'Sync…'; }
+  else if (state === 'error') { badge.classList.add('error'); label.textContent = 'Erreur ⚠'; }
+  else { label.textContent = 'Local'; }
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+async function init() {
+  loadLocal();
+  const hasConfig = S.cfg.clientId && S.cfg.tenantId;
+  if (S.cfg.mode === 'msal' && hasConfig) {
+    const loggedIn = await initMSAL();
+    if (loggedIn) { showApp(); return; }
+  }
+  // Afficher auth screen
+  document.getElementById('auth-screen').style.display = 'block';
+}
+
+async function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app-main').style.display = 'block';
+  updateHeaderProj();
+  renderConfig();
+  if (S.cfg.mode === 'msal') {
+    await loadFromOneDrive();
+    loadUserPhoto();
+  }
+  renderAll();
+  if (S.timer.running && !S.timer.paused && S.timer.start) {
+    S.timer.elapsed = Date.now() - S.timer.start;
+    resumeTimerUI();
+    timerInterval = setInterval(tickTimer, 1000);
+  } else if (S.timer.paused) {
+    showPausedUI();
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+function showPage(p) {
+  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-' + p).classList.add('active');
+  document.getElementById('tab-' + p).classList.add('active');
+  if (p === 'journal') renderJournal();
+  if (p === 'stats') renderStats();
+}
+
+// ═══════════════════════════════════════════════════════
+// TYPE
+// ═══════════════════════════════════════════════════════
+function setType(t) {
+  currentType = t;
+  document.querySelectorAll('.type-btn').forEach(b => { b.className = 'type-btn'; });
+  const map = { travail: 0, appel: 1, rendezvous: 2 };
+  document.querySelectorAll('.type-btn')[map[t]].classList.add('sel-' + t);
+  S.timer.type = t;
+}
+
+// ═══════════════════════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════════════════════
+function startTimer() {
+  S.timer = { running: true, paused: false, start: Date.now() - (S.timer.elapsed || 0), elapsed: S.timer.elapsed || 0, type: currentType };
+  resumeTimerUI();
+  timerInterval = setInterval(tickTimer, 1000);
+  saveLocal();
+}
+
+function resumeTimerUI() {
+  document.getElementById('btns-start').style.display = 'none';
+  document.getElementById('btns-run').style.display = 'flex';
+  document.getElementById('timer-display').className = 'timer-display running';
+}
+
+function showPausedUI() {
+  document.getElementById('btns-start').style.display = 'none';
+  document.getElementById('btns-run').style.display = 'flex';
+  document.getElementById('timer-display').className = 'timer-display paused';
+  document.getElementById('timer-display').textContent = fmtDur(S.timer.elapsed);
+  document.getElementById('btn-pause').textContent = '▶ Reprendre';
+  setType(S.timer.type || 'travail');
+}
+
+function tickTimer() {
+  S.timer.elapsed = Date.now() - S.timer.start;
+  document.getElementById('timer-display').textContent = fmtDur(S.timer.elapsed);
+}
+
+function pauseTimer() {
+  const btn = document.getElementById('btn-pause');
+  const disp = document.getElementById('timer-display');
+  if (!S.timer.paused) {
+    clearInterval(timerInterval);
+    S.timer.paused = true;
+    S.timer.elapsed = Date.now() - S.timer.start;
+    btn.textContent = '▶ Reprendre';
+    disp.className = 'timer-display paused';
+  } else {
+    S.timer.start = Date.now() - S.timer.elapsed;
+    S.timer.paused = false;
+    timerInterval = setInterval(tickTimer, 1000);
+    btn.textContent = '⏸ Pause';
+    disp.className = 'timer-display running';
+  }
+  saveLocal();
+}
+
+function stopTimer() {
+  if (S.timer.elapsed < 5000) { toast('Durée trop courte'); return; }
+  clearInterval(timerInterval);
+  const desc = document.getElementById('timer-desc').value.trim() || 'Sans description';
+  const now = new Date();
+  const startDt = new Date(now.getTime() - S.timer.elapsed);
+  addEntry({ id: uid(), project: S.activeProject, type: S.timer.type, desc, date: dateStr(startDt), startTime: timeStr(startDt), endTime: timeStr(now), duration: S.timer.elapsed });
+  resetTimerUI();
+  renderAll();
+  scheduleSync();
+  toast('Entrée enregistrée ✓', 'ok');
+}
+
+function resetTimerUI() {
+  clearInterval(timerInterval);
+  S.timer = { running: false, paused: false, start: null, elapsed: 0, type: currentType };
+  document.getElementById('timer-display').textContent = '00:00:00';
+  document.getElementById('timer-display').className = 'timer-display';
+  document.getElementById('btns-start').style.display = 'flex';
+  document.getElementById('btns-run').style.display = 'none';
+  document.getElementById('timer-desc').value = '';
+  document.getElementById('btn-pause').textContent = '⏸ Pause';
+  saveLocal();
+}
+
+// ═══════════════════════════════════════════════════════
+// MANUAL ENTRY
+// ═══════════════════════════════════════════════════════
+function openManual() {
+  const now = new Date();
+  document.getElementById('m-date').value = dateStr(now);
+  document.getElementById('m-start').value = timeStr(now);
+  document.getElementById('m-end').value = timeStr(now);
+  document.getElementById('m-desc').value = '';
+  document.getElementById('m-type').value = currentType;
+  document.getElementById('modal-manual').classList.add('show');
+}
+function saveManual() {
+  const date = document.getElementById('m-date').value;
+  const start = document.getElementById('m-start').value;
+  const end = document.getElementById('m-end').value;
+  const desc = document.getElementById('m-desc').value.trim() || 'Sans description';
+  const type = document.getElementById('m-type').value;
+  if (!date || !start || !end) { toast('Champs incomplets'); return; }
+  let dur = new Date(date + 'T' + end) - new Date(date + 'T' + start);
+  if (dur <= 0) dur += 86400000;
+  addEntry({ id: uid(), project: S.activeProject, type, desc, date, startTime: start, endTime: end, duration: dur });
+  closeModal('modal-manual');
+  renderAll();
+  scheduleSync();
+  toast('Entrée ajoutée ✓', 'ok');
+}
+
+// ═══════════════════════════════════════════════════════
+// ENTRIES
+// ═══════════════════════════════════════════════════════
+function addEntry(e) { S.entries.unshift(e); saveLocal(); }
+function deleteEntry(id) {
+  S.entries = S.entries.filter(e => e.id !== id);
+  saveLocal(); renderAll(); scheduleSync();
+  toast('Entrée supprimée');
+}
+function projEntries() { return S.entries.filter(e => e.project === S.activeProject); }
+function todayEntries() { return projEntries().filter(e => e.date === dateStr(new Date())); }
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function renderAll() { updateTodaySummary(); renderTodayList(); }
+
+function updateTodaySummary() {
+  const e = todayEntries();
+  const total = e.reduce((s, x) => s + x.duration, 0);
+  document.getElementById('td-total').textContent = fmtHM(total);
+  document.getElementById('td-appels').textContent = e.filter(x => x.type === 'appel').length;
+  document.getElementById('td-rdv').textContent = e.filter(x => x.type === 'rendezvous').length;
+}
+
+function renderTodayList() {
+  const e = todayEntries();
+  document.getElementById('list-today').innerHTML = e.length ? e.map(entryHTML).join('') : emptyHTML('Aucune entrée aujourd\'hui<br><small>Démarre le chrono ou ajoute une saisie manuelle</small>');
+}
+
+function renderJournal() {
+  const from = document.getElementById('f-from').value;
+  const to = document.getElementById('f-to').value;
+  const type = document.getElementById('f-type').value;
+  let e = projEntries();
+  if (from) e = e.filter(x => x.date >= from);
+  if (to) e = e.filter(x => x.date <= to);
+  if (type) e = e.filter(x => x.type === type);
+  document.getElementById('list-journal').innerHTML = e.length ? e.map(x => entryHTML(x, true)).join('') : emptyHTML('Aucune entrée trouvée');
+}
+
+function renderStats() {
+  const e = projEntries();
+  const total = e.reduce((s, x) => s + x.duration, 0);
+  const trav = e.filter(x => x.type === 'travail').reduce((s, x) => s + x.duration, 0);
+  const app = e.filter(x => x.type === 'appel').reduce((s, x) => s + x.duration, 0);
+  const rdv = e.filter(x => x.type === 'rendezvous').reduce((s, x) => s + x.duration, 0);
+  document.getElementById('stats-sum').innerHTML = `
+    <div class="sum-card c-total"><div class="sum-val">${fmtHM(total)}</div><div class="sum-label">Total</div></div>
+    <div class="sum-card c-appel"><div class="sum-val">${e.filter(x=>x.type==='appel').length}</div><div class="sum-label">Appels</div></div>
+    <div class="sum-card c-rdv"><div class="sum-val">${e.filter(x=>x.type==='rendezvous').length}</div><div class="sum-label">RDV</div></div>`;
+  document.getElementById('stats-bars').innerHTML = [
+    {l:'Travail',v:trav,c:'fill-travail'},{l:'Appels',v:app,c:'fill-appel'},{l:'Rendez-vous',v:rdv,c:'fill-rendezvous'}
+  ].map(b => `<div class="bar-wrap"><div class="bar-label"><span>${b.l}</span><span>${fmtHM(b.v)}</span></div>
+    <div class="bar-track"><div class="bar-fill ${b.c}" style="width:${total?Math.round(b.v/total*100):0}%"></div></div></div>`).join('');
+  const week = Array.from({length:7},(_,i)=>{ const d=new Date(); d.setDate(d.getDate()-(6-i)); const ds=dateStr(d); return {d,ds,dur:projEntries().filter(x=>x.date===ds).reduce((s,x)=>s+x.duration,0)}; });
+  const maxDur = Math.max(...week.map(w=>w.dur),1);
+  document.getElementById('stats-week').innerHTML = week.map(w=>`
+    <div class="week-bar-wrap">
+      <div class="week-bar-inner"><div class="week-bar" style="height:${Math.round(w.dur/maxDur*100)}%;${w.dur===0?'opacity:.1':''}"></div></div>
+    </div>`).join('');
+  document.getElementById('stats-week-labels').innerHTML = week.map(w=>`<div style="flex:1;text-align:center;font-size:9px;color:var(--muted);font-family:var(--font-mono)">${w.d.toLocaleDateString('fr-CA',{weekday:'short'})}</div>`).join('');
+}
+
+function entryHTML(e, showDate = false) {
+  const ico = {travail:'💻',appel:'📞',rendezvous:'📅'};
+  const lbl = {travail:'Travail',appel:'Appel',rendezvous:'Rendez-vous'};
+  const meta = (showDate ? e.date + ' · ' : '') + e.startTime + '–' + e.endTime + ' · ' + lbl[e.type];
+  return `<div class="entry">
+    <div class="entry-icon ei-${e.type}">${ico[e.type]}</div>
+    <div class="entry-body">
+      <div class="entry-desc">${esc(e.desc)}</div>
+      <div class="entry-meta">${meta}</div>
+    </div>
+    <div class="entry-dur">${fmtHM(e.duration)}</div>
+    <button class="entry-del" onclick="deleteEntry('${e.id}')">✕</button>
+  </div>`;
+}
+
+function emptyHTML(msg) { return `<div class="empty"><div class="empty-ico">🗂</div><div class="empty-txt">${msg}</div></div>`; }
+
+// ═══════════════════════════════════════════════════════
+// PROJECTS
+// ═══════════════════════════════════════════════════════
+function openProjModal() { renderProjList(); document.getElementById('modal-proj').classList.add('show'); }
+function renderProjList() {
+  document.getElementById('proj-list').innerHTML = S.projects.map(p => `
+    <div class="proj-item ${p.id===S.activeProject?'is-active':''}" onclick="selectProj('${p.id}')">
+      <div class="proj-dot-sm" style="background:${p.color}"></div>
+      <span>${esc(p.name)}</span>
+      ${S.projects.length>1&&p.id!==S.activeProject?`<button class="proj-del" onclick="event.stopPropagation();delProj('${p.id}')">✕</button>`:''}
+    </div>`).join('');
+}
+function selectProj(id) {
+  S.activeProject = id; saveLocal(); updateHeaderProj();
+  closeModal('modal-proj'); renderAll();
+}
+function addProject() {
+  const name = document.getElementById('new-proj-name').value.trim();
+  if (!name) return;
+  S.projects.push({ id: 'p_' + Date.now(), name, color: PROJ_COLORS[S.projects.length % PROJ_COLORS.length] });
+  document.getElementById('new-proj-name').value = '';
+  saveLocal(); renderProjList();
+}
+function delProj(id) {
+  S.projects = S.projects.filter(p => p.id !== id);
+  saveLocal(); renderProjList();
+}
+function updateHeaderProj() {
+  const p = S.projects.find(p => p.id === S.activeProject) || S.projects[0];
+  if (!p) return;
+  document.getElementById('hdr-proj-name').textContent = p.name;
+  document.getElementById('hdr-proj-dot').style.background = p.color;
+}
+
+// ═══════════════════════════════════════════════════════
+// CONFIG PAGE
+// ═══════════════════════════════════════════════════════
+function renderConfig() {
+  const isOnline = S.cfg.mode === 'msal';
+  const hasCfg = S.cfg.clientId && S.cfg.tenantId;
+  document.getElementById('config-content').innerHTML = `
+    <div class="section-title">Connexion Microsoft 365</div>
+    ${isOnline
+      ? `<div class="info-box">✅ Connecté — données synchronisées avec <strong>OneDrive for Business</strong><br>Fichier: <strong>/ChronoPro/chronopro-data.json</strong></div>
+         <button class="export-btn" style="width:100%;margin-bottom:8px" onclick="manualSync()">🔄 Synchroniser maintenant</button>
+         <button class="export-btn" style="width:100%;border-color:rgba(255,71,87,.3);color:var(--danger)" onclick="logout()">⏏ Déconnexion</button>`
+      : `<div class="warn-box">⚠️ Mode hors-ligne — les données ne sont sauvegardées que dans ce navigateur</div>
+         <button class="btn-primary" onclick="loginMSAL()" style="margin-bottom:8px">Se connecter avec Microsoft</button>`
+    }
+    <div class="section-title" style="margin-top:20px">App Registration (Entra ID)</div>
+    <div class="info-box">Ces identifiants sont nécessaires pour la connexion Microsoft. <span style="color:var(--accent);cursor:pointer" onclick="showSetupGuide()">Voir le guide →</span></div>
+    <label class="form-label">Client ID (Application ID)</label>
+    <div class="config-input-wrap">
+      <input class="config-input ${S.cfg.clientId ? 'valid' : ''}" id="cfg-client" value="${esc(S.cfg.clientId)}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="validateCfgInput(this)">
+      <span class="config-input-icon">${S.cfg.clientId ? '✓' : ''}</span>
+    </div>
+    <label class="form-label">Tenant ID (Directory ID)</label>
+    <div class="config-input-wrap">
+      <input class="config-input ${S.cfg.tenantId ? 'valid' : ''}" id="cfg-tenant" value="${esc(S.cfg.tenantId)}" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" oninput="validateCfgInput(this)">
+      <span class="config-input-icon">${S.cfg.tenantId ? '✓' : ''}</span>
+    </div>
+    <button class="btn-primary" onclick="saveCfg()">Enregistrer la configuration</button>
+    <div class="section-title" style="margin-top:20px">Redirect URI à utiliser</div>
+    <div class="step-code" style="margin-top:0;font-size:11px;word-break:break-all">${window.location.href.split('?')[0].split('#')[0]}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;line-height:1.6">Copie cette URL dans la Redirect URI (SPA) de ton App Registration dans Entra ID.</div>
+  `;
+}
+
+function validateCfgInput(el) {
+  const val = el.value.trim();
+  const isGuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+  el.className = 'config-input ' + (val === '' ? '' : isGuid ? 'valid' : 'invalid');
+  el.nextElementSibling.textContent = (val && isGuid) ? '✓' : '';
+}
+
+function saveCfg() {
+  const clientId = document.getElementById('cfg-client').value.trim();
+  const tenantId = document.getElementById('cfg-tenant').value.trim();
+  S.cfg.clientId = clientId;
+  S.cfg.tenantId = tenantId;
+  saveLocal();
+  renderConfig();
+  toast('Configuration sauvegardée ✓', 'ok');
+}
+
+function logout() {
+  if (!confirm('Se déconnecter de Microsoft ?')) return;
+  if (msalApp && msalAccount) { msalApp.logoutRedirect({ account: msalAccount }); return; }
+  S.cfg.mode = 'offline';
+  saveLocal();
+  location.reload();
+}
+
+function showUserMenu() {
+  if (S.cfg.mode === 'msal' && msalAccount) {
+    toast(msalAccount.username || msalAccount.name || 'Connecté', 'ok');
+  } else {
+    toast('Mode hors-ligne');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════
+function exportCSV() {
+  const rows = [['Date','Début','Fin','Durée (min)','Type','Description']];
+  projEntries().forEach(e => rows.push([e.date,e.startTime,e.endTime,Math.round(e.duration/60000),e.type,`"${e.desc.replace(/"/g,'""')}"`]));
+  dlFile(rows.map(r=>r.join(',')).join('\n'), 'chronopro.csv', 'text/csv;charset=utf-8');
+}
+function exportTSV() {
+  const rows = [['Date','Début','Fin','Durée (min)','Type','Description']];
+  projEntries().forEach(e => rows.push([e.date,e.startTime,e.endTime,Math.round(e.duration/60000),e.type,e.desc]));
+  dlFile(rows.map(r=>r.join('\t')).join('\n'), 'chronopro.tsv', 'text/tab-separated-values');
+}
+function exportJSON() { dlFile(JSON.stringify(projEntries(),null,2),'chronopro.json','application/json'); }
+function printReport() {
+  const p = S.projects.find(x=>x.id===S.activeProject)||S.projects[0];
+  const e = projEntries(); const total = e.reduce((s,x)=>s+x.duration,0);
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${p.name}</title>
+  <style>body{font-family:sans-serif;padding:30px;color:#111}h1{font-size:22px}
+  .meta{color:#666;font-size:13px;margin:4px 0 24px}table{width:100%;border-collapse:collapse}
+  th{background:#f4f4f4;padding:8px 10px;text-align:left;font-size:12px;border-bottom:2px solid #ddd}
+  td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}
+  .total{font-weight:bold;margin-top:16px;font-size:14px;text-align:right}</style><script src="https://unpkg.com/@azure/msal-browser@2.38.3/lib/msal-browser.min.js"></script>
+</head><body>
+  <h1>📋 ${esc(p.name)}</h1>
+  <div class="meta">Rapport généré le ${new Date().toLocaleDateString('fr-CA')} · ${e.length} entrées</div>
+  <table><tr><th>Date</th><th>Début</th><th>Fin</th><th>Durée</th><th>Type</th><th>Description</th></tr>
+  ${e.map(x=>`<tr><td>${x.date}</td><td>${x.startTime}</td><td>${x.endTime}</td><td>${fmtHM(x.duration)}</td><td>${x.type}</td><td>${esc(x.desc)}</td></tr>`).join('')}
+  </table><div class="total">Total: ${fmtHM(total)}</div></body></html>`);
+  w.document.close(); w.print();
+}
+function clearAll() {
+  if (!confirm('Effacer toutes les données locales? (OneDrive non affecté si connecté)')) return;
+  S.entries = []; saveLocal(); renderAll(); toast('Données locales effacées');
+}
+function dlFile(c, n, t) { const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob(['\ufeff'+c],{type:t})); a.download=n; a.click(); }
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+function fmtDur(ms) { const s=Math.floor(ms/1000); return `${String(Math.floor(s/3600)).padStart(2,'0')}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`; }
+function fmtHM(ms) { const m=Math.round(ms/60000); const h=Math.floor(m/60); const mn=m%60; return h>0?`${h}h ${String(mn).padStart(2,'0')}m`:`${mn}m`; }
+function dateStr(d) { return d.toISOString().slice(0,10); }
+function timeStr(d) { return d.toTimeString().slice(0,5); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+let toastTimer;
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show' + (type ? ' ' + type : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════════════════
+// DÉMARRAGE
+// ═══════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
